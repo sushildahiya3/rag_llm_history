@@ -1,5 +1,5 @@
 import streamlit as st
-from vipas import model, logger
+from vipas import model
 from sentence_transformers import SentenceTransformer
 import faiss
 import pdfplumber
@@ -105,19 +105,23 @@ st.write("Upload a document (PDF, DOCX, or Excel) under 2 MB and ask questions u
 # File upload
 uploaded_file = st.file_uploader("Upload a file (PDF, DOCX, or Excel):", type=["pdf", "docx", "xlsx"])
 if uploaded_file:
-    file_size = uploaded_file.size / (1024 * 1024)
+    file_size = uploaded_file.size / (1024 * 1024)  # File size in MB
     if file_size > 2:
         st.error("File size exceeds 2MB. Please upload a smaller file.")
     else:
-        file_name = uploaded_file.name
-        if file_name != rag_processor.last_file_name:
-            text = rag_processor.preprocess_document(uploaded_file)
+        st.success(f"File '{uploaded_file.name}' uploaded successfully! File size: {file_size:.2f} MB.")
+        process_button = st.button("Submit File")
+        if process_button:
+            file_name = uploaded_file.name
+            if file_name != rag_processor.last_file_name:
+                st.write("Processing the uploaded file...")
+                text = rag_processor.preprocess_document(uploaded_file)
 
-            if text:
-                chunks = rag_processor.store_embeddings(text)
-                if chunks:
-                    rag_processor.last_file_name = file_name
-                    st.success("Document processed and indexed successfully!")
+                if text:
+                    chunks = rag_processor.store_embeddings(text)
+                    if chunks:
+                        rag_processor.last_file_name = file_name
+                        st.success("Document processed and indexed successfully!")
 
 # Query and response handling
 if rag_processor.last_file_name and rag_processor.faiss_index is not None:
